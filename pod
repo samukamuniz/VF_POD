@@ -1230,7 +1230,7 @@ int main () {
 						}
 						case 4:{
 							arquivo.open("result.csv");
-							arquivo << "abb;";
+							arquivo << "rn;";
 							arquivo << total << ";";
 							exportRn(raizRn);
 							arquivo.close();
