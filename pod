@@ -956,9 +956,9 @@ int main () {
 	cout<<"\t===============================================";
 	cout<<"\n\n\tSEJA BEM VINDO";
 	cout<<"\n\n\tEQUIPE:";
-	cout<<"\n\t- Helano";
-	cout<<"\n\t- Igor";
-	cout<<"\n\t- Samuel";
+	cout<<"\n\t- Francisco Helano Mesquita Rocha";
+	cout<<"\n\t- Igor Bonfim";
+	cout<<"\n\t- Samuel Anderson Muniz Vasconcelos";
 	cout<<"\n\n\tVamos Começar?";
 	cout<<"\n\n\tDigite o Nome do arquivo que deseja importar: ";
 	cin>>arq;//Ler o nome do arquivo digitado pelo usuário
@@ -1100,7 +1100,7 @@ int main () {
 							break;
 						}			
 					}//Fim Switch opções ABB
-			        }while(opcao < 1 || opcao > 5);//Fim Do
+			        }while(opcao != 5);//Fim Do
 				}	
 			}//Fim case 1: Para árvores ABB
 			
@@ -1179,7 +1179,7 @@ int main () {
 							break;
 						}			
 					}//Fim Switch opções AVL
-			        }while(opcao < 1 || opcao > 5);//Fim Do
+			        }while(opcao != 5);//Fim Do
 				}	
 			}//Fim case 2: Para árvores AVL
 			
@@ -1258,7 +1258,7 @@ int main () {
 							break;
 						}			
 					}//Fim Switch opções RN
-			        }while(opcao < 1 || opcao > 5);//Fim Do
+			        }while(opcao != 5);//Fim Do
 				}	
 			}//Fim case 3: Para árvores RN			
 		}//Fim Switch que aponta para menus: ABB, AVL ou RN
