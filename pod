@@ -1,0 +1,1268 @@
+#include <cstdlib>
+#include <iostream>
+#include <vector>
+#include <sstream>
+#include <fstream>
+#include <string>
+#include <stdio.h>
+#include <stdlib.h>
+using namespace std;
+
+//Árvore AVL e ABB
+struct noAbb
+{
+	noAbb* pai =  NULL; 
+	noAbb* esq =  NULL; 
+	noAbb* dir =  NULL;
+	int val;
+};
+
+struct noAvl
+{
+	noAvl* pai = NULL; 
+	noAvl* esq =  NULL; 
+	noAvl* dir =  NULL;
+	int val, altura, fb;
+};
+
+//Declaração de procedimentos/Funções/Variáveis Globais
+int total; //Contador de nós das estruturas
+ofstream arquivo; //Usando para exportação do arquivo
+
+//Declarações para Árvore ABB
+noAbb* raizAbb =  NULL; 
+noAbb* auxAbb =  NULL;
+void insereAbb(noAbb* noh, int val);
+void removeAbb(noAbb *noh, int val);
+bool buscaAbb(noAbb* noh, int val);
+noAbb* menorValorAbb(noAbb* menor);
+noAbb* maiorValorAbb(noAbb* maior);
+void emOrdemAbb(noAbb* noh);
+
+//Funções e procedimentos para ABB
+void insereAbb(noAbb* noh, int val)
+{
+	if (raizAbb == NULL)
+	{
+		raizAbb = new struct noAbb;
+		raizAbb->val = val;
+		//cout<<"\n\tNó "<<val<<" inserido!"<<endl;
+	}
+	else
+	{
+		if (noh->val >= val)
+		{
+			if (noh->esq == NULL)
+			{
+				noh->esq = new struct noAbb;
+				noh->esq->val = val;
+				noh->esq->pai = noh;
+				//cout<<"\n\tNó "<<val<<" inserido!"<<endl;
+			}
+			else
+				insereAbb(noh->esq, val);
+		}
+		else
+		{
+			if (noh->dir == NULL)
+			{
+				noh->dir = new struct noAbb;
+				noh->dir->val = val;
+				noh->dir->pai = noh;
+				//cout<<"\n\tNó "<<val<<" inserido!"<<endl;
+			}
+			else
+			{
+				insereAbb(noh->dir, val);
+			}
+		}
+	}
+}
+
+void removeAbb(noAbb *noh, int val)
+{
+	if (raizAbb == NULL) cout << "\n\tÁrvore vazia" << endl;
+	else {
+		if (buscaAbb(noh, val) == false)
+			cout << "\n\tValor Inezistente" << endl;
+		else {
+			if (noh->val == val)
+			{
+				if (noh->esq == NULL && noh->dir == NULL)
+				{
+					if (noh == raizAbb) {
+						delete(noh);
+						raizAbb =  NULL;
+					}
+					else {
+						noAbb* pai = noh->pai;
+						if (pai->esq == noh) pai->esq = NULL;
+						else pai->dir = NULL;
+						delete(noh);
+					}
+				}
+				else {
+					if (noh->esq != NULL)
+						auxAbb = maiorValorAbb(noh->esq);
+					else
+						auxAbb = menorValorAbb(noh->dir);
+					noh->val = auxAbb->val;
+					removeAbb(auxAbb, auxAbb->val);
+				}
+			}
+			else {
+				if (noh->val > val)
+					removeAbb(noh->esq, val);
+				else
+					removeAbb(noh->dir, val);
+			}
+		}
+	}
+}
+
+bool buscaAbb(noAbb* noh, int val)
+{
+	if (noh == NULL) return false;
+	else if (noh->val == val) return true;
+	if (noh->val > val)	buscaAbb(noh->esq, val);
+	else buscaAbb(noh->dir, val);
+}
+
+noAbb* menorValorAbb(noAbb* menor)
+{
+	if (raizAbb == NULL) cout << "\n\tÁrvore vazia" << endl;
+	else
+	{
+		while (menor->esq != NULL)
+			menor = menor->esq;
+		return menor;
+	}
+}
+
+noAbb* maiorValorAbb(noAbb* maior)
+{
+	if (raizAbb == NULL) cout <<"\n\tÁrvore vazia"<< endl;
+	else
+	{
+		while (maior->dir != NULL)
+			maior = maior->dir;
+		return maior;
+	}
+}
+
+void emOrdemAbb(noAbb* noh)
+{
+	if (raizAbb == NULL) 
+	cout << "\n\tÁrvore Vazia" << endl;
+	else {
+		if (noh->esq != NULL) emOrdemAbb(noh->esq);
+		if (noh != NULL) cout <<noh->val << "; ";
+		else cout << endl;
+		if (noh->dir != NULL) emOrdemAbb(noh->dir);
+	}
+}
+
+void exportAbb(noAbb* noh) {
+	if (raizAbb != NULL)
+	{
+		if (noh->esq != NULL) exportAbb(noh->esq);
+		if (noh != NULL) arquivo << noh->val << ";";
+		if (noh->dir != NULL) exportAbb(noh->dir);
+	}
+	else cout <<"\n\tÁrvore vazia" << endl;
+}
+
+//Declarações para Árvore AVL
+noAvl* raizAvl =  NULL; 
+noAvl* auxAvl =  NULL;
+void insereAvl(noAvl* noAux, int val);
+void removeAvl(noAvl *noAux, int val);
+void emOrdemAvl(noAvl* noAux);
+void rotDirEsq(noAvl* noAux);
+void rotEsqDir(noAvl* noAux);
+void rotDir(noAvl* noAux);
+void rotEsq(noAvl* noAux);
+void balancear(noAvl* noAux);
+void fb(struct noAvl* noAux);
+int altura(struct noAvl* noAux);
+bool buscaAvl(noAvl* noAux, int val);
+noAvl* menorValorAvl(noAvl* menor);
+noAvl* maiorValorAvl(noAvl* maior);
+
+//Funções e procedimentos para AVL
+void insereAvl(noAvl* noAux, int val)
+{
+	if (raizAvl == NULL)
+	{
+		raizAvl = new struct noAvl;
+		raizAvl->val = val;
+		raizAvl->fb = 0;
+	}
+	else
+	{
+		if (noAux->val >= val)
+		{
+			if (noAux->esq == NULL)
+			{
+				noAux->esq = new struct noAvl;
+				noAux->esq->val = val;
+				noAux->esq->pai = noAux;
+				fb(noAux->esq);
+			}
+			else
+				insereAvl(noAux->esq, val);
+		}
+		else
+		{
+			if (noAux->dir == NULL)
+			{
+				noAux->dir = new struct noAvl;
+				noAux->dir->val = val;
+				noAux->dir->pai = noAux;
+				fb(noAux->dir);
+			}
+			else
+			{
+				insereAvl(noAux->dir, val);
+			}
+		}
+	}
+}
+
+void removeAvl(noAvl *noAux, int val)
+{
+	if (raizAvl == NULL) cout << "\n\tÁrvore vazia" << endl;
+	else {
+		if (buscaAvl(noAux, val) == false)
+			cout << "\n\tValor Inexistente" << endl;
+		else {
+			if (noAux->val == val)
+			{
+				if (noAux->esq == NULL && noAux->dir == NULL)
+				{
+					if (noAux == raizAvl) {
+						delete(noAux);
+						raizAvl =  NULL;
+					}
+					else {
+						noAvl* pai = noAux->pai;
+						if (pai->esq == noAux) pai->esq = NULL;
+						else pai->dir = NULL;
+						delete(noAux);
+						fb(raizAvl);
+					}
+				}
+				else {
+					if (noAux->esq != NULL)
+						auxAvl = maiorValorAvl(noAux->esq);
+					else
+						auxAvl = menorValorAvl(noAux->dir);
+					noAux->val = auxAvl->val;
+					removeAvl(auxAvl, auxAvl->val);
+				}
+			}
+			else {
+				if (noAux->val > val)
+					removeAvl(noAux->esq, val);
+				else
+					removeAvl(noAux->dir, val);
+			}
+		}
+	}
+}
+
+bool buscaAvl(noAvl* noAux, int val)
+{
+	if (noAux == NULL) return false;
+	else if (noAux->val == val) return true;
+	if (noAux->val > val)	buscaAvl(noAux->esq, val);
+	else buscaAvl(noAux->dir, val);
+}
+
+noAvl* menorValorAvl(noAvl* menor)
+{
+	if (raizAvl == NULL) cout << "\n\tÁrvore vazia" << endl;
+	else
+	{
+		while (menor->esq != NULL)
+			menor = menor->esq;
+		return menor;
+	}
+}
+
+noAvl* maiorValorAvl(noAvl* maior)
+{
+	if (raizAvl == NULL) cout << "\n\tÁrvore vazia" << endl;
+	else
+	{
+		while (maior->dir != NULL)
+			maior = maior->dir;
+		return maior;
+	}
+}
+
+void emOrdemAvl(noAvl* noAux)
+{
+	if (raizAvl == NULL) cout << "\n\tÁrvore vazia" << endl;
+	else {
+		if (noAux->esq != NULL) emOrdemAvl(noAux->esq);
+		if (noAux != NULL) cout << noAux->val << " ";
+		else cout << endl;
+		if (noAux->dir != NULL) emOrdemAvl(noAux->dir);
+	}
+}
+
+void rotDirEsq(noAvl* noAux)
+{
+	rotDir(noAux->dir);
+	rotEsq(noAux);
+}
+
+void rotEsqDir(noAvl* noAux)
+{
+	rotEsq(noAux->esq);
+	rotDir(noAux);
+}
+
+void rotEsq(noAvl* noAux)
+{
+	if (noAux == raizAvl) {
+		noAux->dir->pai = NULL;
+		raizAvl = noAux->dir;
+	}
+	noAux->dir->pai = noAux->pai;
+	noAux->pai = noAux->dir;
+	if (noAux->dir->esq != NULL)
+		noAux->dir->esq->pai = noAux;
+	noAux->dir = noAux->dir->esq;
+	noAux->pai->esq = noAux;
+	if (noAux->pai->pai != NULL && noAux->pai->pai->dir == noAux)
+		noAux->pai->pai->dir = noAux->pai;
+	else if (noAux->pai->pai != NULL)
+		noAux->pai->pai->esq = noAux->pai;
+}
+
+void rotDir(noAvl* noAux)
+{
+	if (noAux == raizAvl) {
+		noAux->esq->pai = NULL;
+		raizAvl = noAux->esq;
+	}
+	noAux->esq->pai = noAux->pai;
+	noAux->pai = noAux->esq;
+	if (noAux->esq->dir != NULL)
+		noAux->esq->dir->pai = noAux;
+	noAux->esq = noAux->esq->dir;
+	noAux->pai->dir = noAux;
+	if (noAux->pai->pai != NULL && noAux->pai->pai->esq == noAux)
+		noAux->pai->pai->esq = noAux->pai;
+	else if (noAux->pai->pai != NULL)
+		noAux->pai->pai->dir = noAux->pai;
+}
+
+void fb(noAvl* noAux)
+{
+	if (noAux == NULL) return;
+	noAux->fb = altura(noAux->dir) - altura(noAux->esq);
+	if (noAux->fb <= -2 || noAux->fb >= 2)
+		balancear(noAux);
+	else
+		fb(noAux->pai);
+}
+
+int altura(noAvl* noAux)
+{
+	if (noAux == NULL)
+		return 0;
+	int he = altura(noAux->esq);
+	int hd = altura(noAux->dir);
+	if (he > hd) return 1 + he;
+	return 1 + hd;
+}
+
+void balancear(noAvl* noAux) {
+	if (noAux->fb >= 2) {
+		int d = noAux->fb - noAux->dir->fb;
+		if (d < 0) d *= -1;
+		if (d < 3) {
+			rotEsq(noAux);
+			fb(noAux->esq);
+		}
+		else rotDirEsq(noAux);
+	}
+	else {
+		int d = noAux->fb - noAux->esq->fb;
+		if (d < 0) d *= -1;
+		if (d < 3) {
+			rotDir(noAux);
+			fb(noAux->dir);
+		}
+		else rotEsqDir(noAux);
+	}
+}
+
+void buscarRaizAvl(noAvl* noAux)
+{
+	if (raizAvl == NULL) {
+		cout << "\n\tÁrvore vazia" << endl;
+	}
+	else {
+		cout << raizAvl->val << endl;
+	}
+}
+
+void exportAvl(noAvl* noAux) {
+	if (raizAvl != NULL)
+	{
+		if (noAux->esq != NULL) exportAvl(noAux->esq);
+		if (noAux != NULL) arquivo << noAux->val << ";";
+		if (noAux->dir != NULL) exportAvl(noAux->dir);
+	}
+	else cout <<"\n\tÁrvore vazia" << endl;
+}
+
+//INICIO RUBRO NEGRA
+
+struct noRn
+{
+       int val;
+       char cor;
+       noRn *pai;
+       noRn *esq;
+       noRn *dir;
+};
+
+noRn *raizRn=NULL;
+noRn *aux=NULL;
+
+void insereRn(int value);
+void insereRnfix(noRn *);
+void rotEsq(noRn *);
+void rotDir(noRn *);
+void removeRn();
+noRn* successor(noRn *);
+void removeRnfix(noRn *);
+void disp();
+void emOrdemRn(noRn* noAux);
+void exportRn(noRn* noAux);
+void mostraRn( noRn *);
+void buscaRn();
+
+void insereRn(int value)
+{
+     int i=0;
+     noRn *p,*q;
+     noRn *t = new noRn;
+     t->val=value;
+     t->esq=NULL;
+     t->dir=NULL;
+     t->cor='r';
+     p=raizRn;
+     q=NULL;
+     if(raizRn==NULL)
+     {
+           raizRn=t;
+           t->pai=NULL;
+     }
+     else
+     {
+         while(p!=NULL)
+         {
+              q=p;
+              if(p->val < t->val)
+                  p=p->dir;
+              else
+                  p=p->esq;
+         }
+         t->pai=q;
+         if(q->val<t->val)
+              q->dir=t;
+         else
+              q->esq=t;
+     }
+    string cor = "Vermelho";
+	if(t->cor=='b')
+		cor = "Preto";
+    
+     insereRnfix(t);
+}
+void insereRnfix(noRn *t)
+{
+     noRn *u;
+     if(raizRn==t)
+     {
+         t->cor='b';
+         string cor = "Vermelho";
+		 if(t->cor=='b')
+			 cor = "Preto";
+		 //cout<<"\n\t";
+         //cout<<"Raiz: "<<t->val <<" cor: "<< cor;
+         return;
+     }
+     while(t->pai!=NULL&&t->pai->cor=='r')
+     {
+           noRn *g=t->pai->pai;
+           if(g->esq==t->pai)
+           {
+                        if(g->dir!=NULL)
+                        {
+                              u=g->dir;
+                              if(u->cor=='r')
+                              {
+                                   t->pai->cor='b';
+									 //cout<<"\n\t";
+							         //cout<<"No: "<<t->pai->val <<" cor: Preto";
+                                   u->cor='b';
+									 //cout<<"\n\t";
+							         //cout<<"No: "<<u->val <<" cor: Preto";
+                                   g->cor='r';
+									 //cout<<"\n\t";
+							         //cout<<"No: "<<g->val <<" cor: Vermelho";
+                                   t=g;
+                                    
+                              }
+                        }
+                        else
+                        {
+                            if(t->pai->dir==t)
+                            {
+                                 t=t->pai;
+                                 rotEsq(t);
+                            }
+                            t->pai->cor='b';
+                            //cout<<"\n\t";
+							//cout<<"No: "<<t->pai->val <<" cor: Preto";
+                            g->cor='r';
+                            //cout<<"\n\t";
+							//cout<<"No: "<<g->val <<" cor: Vermelho rotacionado p/ direita";
+                            rotDir(g);
+                        }
+           }
+           else
+           {
+                        if(g->esq!=NULL)
+                        {
+                             u=g->esq;
+                             if(u->cor=='r')
+                             {
+                                  t->pai->cor='b';
+                                  //cout<<"\n\t";
+							      //cout<<"No: "<<t->pai->val <<" cor: Preto";
+                                  u->cor='b';
+                                  //cout<<"\n\t";
+							      //cout<<"No: "<<u->val <<" cor: Preto";
+                                  g->cor='r';
+                                  //cout<<"\n\t";
+								  //cout<<"No: "<<g->val <<" cor: Vermelho";
+                                  t=g;
+                             }
+                        }
+                        else
+                        {
+                            if(t->pai->esq==t)
+                            {
+                                   t=t->pai;
+                                   rotDir(t);
+                            }
+                            t->pai->cor='b';
+                            //cout<<"\n\t";
+							//cout<<"No: "<<t->pai->val <<" cor: Preto";
+                            g->cor='r';
+                            //cout<<"\n\t";
+							//cout<<"No: "<<g->val <<" cor: Vermelho rotacionado p/ esquerda";
+                            rotEsq(g);
+                        }
+           }
+           raizRn->cor='b';
+     }
+    //cout<<"\n\t";
+}
+
+void removeRn(int value)
+{
+     if(raizRn==NULL)
+     {
+           cout<<"\n\tÁrvore vazia." ;
+           return ;
+     }
+     noRn *p;
+     p=raizRn;
+     noRn *y=NULL;
+     noRn *q=NULL;
+     int found=0;
+     while(p!=NULL&&found==0)
+     {
+           if(p->val==value)
+               found=1;
+           if(found==0)
+           {
+                 if(p->val<value)
+                    p=p->dir;
+                 else
+                    p=p->esq;
+           }
+     }
+     if(found==0)
+     {
+            cout<<"\n\tElemento Não encontrado.";
+            return ;
+     }
+     else
+     {
+         //cout<<"\nElemento removido: "<<p->val;
+         //cout<<"\nCor: ";
+         if(p->cor=='b'){
+     //cout<<"Black\n";
+    }else
+     //cout<<"Red\n";
+
+         if(p->pai!=NULL){
+		 
+               //cout<<"\nPai: "<<p->pai->val;
+         }else
+               //cout<<"\nNao existe um pai do no.  ";
+         if(p->dir!=NULL){
+		 
+               //cout<<"\nFilho direito: "<<p->dir->val;
+         }else
+               //cout<<"\nNao existe um filho direito do no.  ";
+         if(p->esq!=NULL){
+		 
+               //cout<<"\nFilho esquerdo: "<<p->esq->val;
+         }else
+               //cout<<"\nNao existe um filho esquerdo do no.  ";
+         cout<<"\nNo removdo.";
+         if(p->esq==NULL||p->dir==NULL)
+              y=p;
+         else
+              y=successor(p);
+         if(y->esq!=NULL)
+              q=y->esq;
+         else
+         {
+              if(y->dir!=NULL)
+                   q=y->dir;
+              else
+                   q=NULL;
+         }
+         if(q!=NULL)
+              q->pai=y->pai;
+         if(y->pai==NULL)
+              raizRn=q;
+         else
+         {
+             if(y==y->pai->esq)
+                y->pai->esq=q;
+             else
+                y->pai->dir=q;
+         }
+         if(y!=p)
+         {
+             p->cor=y->cor;
+             p->val=y->val;
+         }
+         if(y->cor=='b')
+             removeRnfix(q);
+     }
+}
+
+void removeRnfix(noRn *p)
+{
+    noRn *s;
+    while(p!=raizRn&&p->cor=='b')
+    {
+          if(p->pai->esq==p)
+          {
+                  s=p->pai->dir;
+                  if(s->cor=='r')
+                  {
+                         s->cor='b';
+                         p->pai->cor='r';
+                         rotEsq(p->pai);
+                         s=p->pai->dir;
+                  }
+                  if(s->dir->cor=='b'&&s->esq->cor=='b')
+                  {
+                         s->cor='r';
+                         p=p->pai;
+                  }
+                  else
+                  {
+                      if(s->dir->cor=='b')
+                      {
+                             s->esq->cor=='b';
+                             s->cor='r';
+                             rotDir(s);
+                             s=p->pai->dir;
+                      }
+                      s->cor=p->pai->cor;
+                      p->pai->cor='b';
+                      s->dir->cor='b';
+                      rotEsq(p->pai);
+                      p=raizRn;
+                  }
+          }
+          else
+          {
+                  s=p->pai->esq;
+                  if(s->cor=='r')
+                  {
+                        s->cor='b';
+                        p->pai->cor='r';
+                        rotDir(p->pai);
+                        s=p->pai->esq;
+                  }
+                  if(s->esq->cor=='b'&&s->dir->cor=='b')
+                  {
+                        s->cor='r';
+                        p=p->pai;
+                  }
+                  else
+                  {
+                        if(s->esq->cor=='b')
+                        {
+                              s->dir->cor='b';
+                              s->cor='r';
+                              rotEsq(s);
+                              s=p->pai->esq;
+                        }
+                        s->cor=p->pai->cor;
+                        p->pai->cor='b';
+                        s->esq->cor='b';
+                        rotDir(p->pai);
+                        p=raizRn;
+                  }
+          }
+       p->cor='b';
+       raizRn->cor='b';
+    }
+}
+
+void rotEsq(noRn *p)
+{
+     if(p->dir==NULL)
+           return ;
+     else
+     {
+           noRn *y=p->dir;
+           if(y->esq!=NULL)
+           {
+                  p->dir=y->esq;
+                  y->esq->pai=p;
+           }
+           else
+                  p->dir=NULL;
+           if(p->pai!=NULL)
+                y->pai=p->pai;
+           if(p->pai==NULL)
+                raizRn=y;
+           else
+           {
+               if(p==p->pai->esq)
+                       p->pai->esq=y;
+               else
+                       p->pai->dir=y;
+           }
+           y->esq=p;
+           p->pai=y;
+     }
+}
+void rotDir(noRn *p)
+{
+     if(p->esq==NULL)
+          return ;
+     else
+     {
+         noRn *y=p->esq;
+         if(y->dir!=NULL)
+         {
+                  p->esq=y->dir;
+                  y->dir->pai=p;
+         }
+         else
+                 p->esq=NULL;
+         if(p->pai!=NULL)
+                 y->pai=p->pai;
+         if(p->pai==NULL)
+               raizRn=y;
+         else
+         {
+             if(p==p->pai->esq)
+                   p->pai->esq=y;
+             else
+                   p->pai->dir=y;
+         }
+         y->dir=p;
+         p->pai=y;
+     }
+}
+
+noRn* successor(noRn *p)
+{
+      noRn *y=NULL;
+     if(p->esq!=NULL)
+     {
+         y=p->esq;
+         while(y->dir!=NULL)
+              y=y->dir;
+     }
+     else
+     {
+         y=p->dir;
+         while(y->esq!=NULL)
+              y=y->esq;
+     }
+     return y;
+}
+
+void disp()
+{
+     mostraRn(raizRn);
+}
+
+void emOrdemRn(noRn* noAux)
+{
+	if (raizRn == NULL) cout << "\n\tÁrvore vazia" << endl;
+	else {
+		if (noAux->esq != NULL) emOrdemRn(noAux->esq);
+		if (noAux != NULL) cout << noAux->val << " ";
+		else cout << endl;
+		if (noAux->dir != NULL) emOrdemRn(noAux->dir);
+	}
+}
+
+void exportRn(noRn* noAux) {
+	if (raizRn != NULL)
+	{
+		if (noAux->esq != NULL) exportRn(noAux->esq);
+		if (noAux != NULL) arquivo << noAux->val << ";";
+		if (noAux->dir != NULL) exportRn(noAux->dir);
+	}
+	else cout <<"\n\tÁrvore vazia" << endl;
+}
+void mostraRn(noRn *p)
+{
+     if(raizRn==NULL)
+     {
+          cout<<"\nÁrvore vazia.";
+          return ;
+     }
+     if(p!=NULL)
+     {
+                cout<<"\n\t No: ";
+                cout<<"\n Valor: "<<p->val;
+                cout<<"\n Cor: ";
+    if(p->cor=='b')
+     cout<<"Preto";
+    else
+     cout<<"Vermelho";
+                if(p->pai!=NULL)
+                       cout<<"\n Pai: "<<p->pai->val;
+                else
+                       cout<<"\n Nao existe um pai do no.  ";
+                if(p->dir!=NULL)
+                       cout<<"\n Filho direito: "<<p->dir->val;
+                else
+                       cout<<"\n Nao existe um filho direito do no.  ";
+                if(p->esq!=NULL)
+                       cout<<"\n :Filho esquerdo: "<<p->esq->val;
+                else
+                       cout<<"\n Nao existe um filho esquerdo do no.  ";
+                cout<<endl;
+    if(p->esq)
+    {
+                 cout<<"\n\nEsquerdo:\n";
+     mostraRn(p->esq);
+    }
+    /*else
+     cout<<"\nNo esq Child.\n";*/
+    if(p->dir)
+    {
+     cout<<"\n\nDireito:\n";
+                 mostraRn(p->dir);
+    }
+    /*else
+     cout<<"\nNo dir Child.\n"*/
+     }
+}
+void buscaRn()
+{
+     if(raizRn==NULL)
+     {
+           cout<<"\nArvore vazia\n" ;
+           return  ;
+     }
+     int x;
+     cout<<"\n\tInsira o valor do no a ser procurado: ";
+     cin>>x;
+     noRn *p=raizRn;
+     int found=0;
+     while(p!=NULL&& found==0)
+     {
+            if(p->val==x)
+                found=1;
+            if(found==0)
+            {
+                 if(p->val<x)
+                      p=p->dir;
+                 else
+                      p=p->esq;
+            }
+     }
+     if(found==0)
+          cout<<"\n\tElemento não encontrado.";
+     else
+     {
+                cout<<"\n\t Procurar o nó: ";
+                cout<<"\n\t Valor: "<<p->val;
+                cout<<"\n\t Cor: ";
+    if(p->cor=='b')
+     cout<<"Preto";
+    else
+     cout<<"Vermelho";
+                if(p->pai!=NULL)
+                       cout<<"\n\t Pai: "<<p->pai->val;
+                else
+                       cout<<"\n Nao existe um psi do no.  ";
+                if(p->dir!=NULL)
+                       cout<<"\n Filho direito: "<<p->dir->val;
+                else
+                       cout<<"\n Nao existe um filho direito do no.  ";
+                if(p->esq!=NULL)
+                       cout<<"\n Filho esquerdo: "<<p->esq->val;
+                else
+                       cout<<"\n Nao existe um filho esquerdo do no.  ";
+                cout<<endl;
+
+     }
+}
+
+//FIM RUBRO NEGRA
+
+
+bool next = true;
+
+int main () {
+	setlocale(LC_ALL, "Portuguese"); //Imprime em tela com os acentos
+	int opcao, valor, nodo; //opcao-> Switch | valor->Digitado pelo usuário para insert/delete | nodo-> Ler cada nó importado do arquivo csv
+	char arq[20]; //arq-> Nome do arquivo
+	string value; //Value-> Ler a linha importada pelo arquivo CSV até encontrar um ";"
+	//nil = (t_no*)malloc(sizeof(t_no));
+	//t_no * a = nil;
+	
+	cout<<"\n\t===============================================";
+	cout<<"\n";
+	cout <<"\t\t\tTRABALHO VF POD"<< endl; //Titulo tela principal
+	cout<<"\t===============================================";
+	cout<<"\n\n\tSEJA BEM VINDO";
+	cout<<"\n\n\tEQUIPE:";
+	cout<<"\n\t- Helano";
+	cout<<"\n\t- Igor";
+	cout<<"\n\t- Samuel";
+	cout<<"\n\n\tVamos Começar?";
+	cout<<"\n\n\tDigite o Nome do arquivo que deseja importar: ";
+	cin>>arq;//Ler o nome do arquivo digitado pelo usuário
+	system("cls");
+	
+	ifstream myfile(arq); // ifstream = padrão ios:in
+	
+	
+	if (myfile.good()){
+		getline(myfile, value, ';');
+		if (value == "abb"){
+			getline(myfile, value, ';');
+			total = atoi(value.c_str());
+			while (myfile.good()){
+				getline(myfile, value, ';');
+				nodo = atoi(value.c_str());
+				insereAbb(raizAbb, nodo); //Chama função que insere nós em estrutura ABB
+				opcao = 1;//Vai para a opção 1 da Switch que aponta para o menu ABB
+			}//Fim Enquanto que monta uma árvore ABB
+			cout<<"\n\t===============================================";
+			cout<<"\n";
+			cout <<"\t\t\tTRABALHO VF POD"<< endl; //Titulo tela principal
+			cout<<"\t===============================================";
+			cout<<"\n\n\tSua importação foi realizada com sucesso!" <<endl;
+			cout<<"\n\tÁrvore Importada: Binária de Busca" <<endl;
+			cout<<"\n\tQuantidade de Nós inseridos: " << total <<endl;	
+		
+		}else if (value == "avl"){//Fim if que aponta para ABB e Começo do if que aponta para AVL
+			getline(myfile, value, ';');
+			total = atoi(value.c_str());
+			while (myfile.good()){
+				getline(myfile, value, ';');
+				nodo = atoi(value.c_str());
+				insereAvl(raizAvl, nodo); //Chama função que insere nós em estrutura AVL
+				opcao = 2;//Vai para a opção 2 da Switch que aponta para o menu AVL 
+			}//Fim Enquanto que monta uma árvore AVL
+			cout<<"\n\t===============================================";
+			cout<<"\n";
+			cout <<"\t\t\tTRABALHO VF POD"<< endl; //Titulo tela principal
+			cout<<"\t===============================================";
+			cout<<"\n\n\tSua importação foi realizada com sucesso!" <<endl;
+			cout<<"\n\tÁrvore Importada: AVL" <<endl;
+			cout<<"\n\tQuantidade de Nós inseridos: " <<total<<endl;
+		
+		}else if (value == "rn"){//Fim if que aponta para AVL e Começo do if que aponta para RN
+			getline(myfile, value, ';');
+			total = atoi(value.c_str());
+			while (myfile.good()){
+				getline(myfile, value, ';');
+				nodo = atoi(value.c_str());
+				insereRn(nodo); //Chama função que insere nós em estrutura RN
+				opcao = 3;//Vai para a opção 3 da Switch que aponta para o menu RN 
+			}//Fim Enquanto que monta uma árvore RN
+			cout<<"\n\t===============================================";
+			cout<<"\n";
+			cout <<"\t\t\tTRABALHO VF POD"<< endl; //Titulo tela principal
+			cout<<"\t===============================================";
+			cout<<"\n\n\tSua importação foi realizada com sucesso!" <<endl;
+			cout<<"\n\tÁrvore Importada: RUBRO NEGRA" <<endl;
+			cout<<"\n\tQuantidade de Nós inseridos: " <<total<<endl;	
+		}//Fim if que aponta para RN		
+	}else{//Caso o arquivo esteja inacessível
+		cout<<"\n\tErro na leitura do arquivo"<<endl;
+	}
+	while (next){
+		switch (opcao){//Switch que aponta para menus: ABB, AVL ou RN
+			case 1:{		        
+		        while(next){
+		        	do{
+		        		cout<<"\n\t===============================================";
+						cout << "\n\t\tMENU ÁRVORE BINÁRIA DE BUSCA"<< endl; //Titulo tela principal
+						cout<<"\t===============================================";
+				    	cout << endl;
+				    	cout << "\t1 - Inserir Nó" << endl;
+				        cout << "\t2 - Remover Nó" << endl;
+				        cout << "\t3 - Listar Arvore" << endl;
+				        cout << "\t4 - Exportar CSV" << endl;
+				        cout << "\t5 - Sair" << endl;
+		        		cout<<"\n\tDigite a opção que deseja: ";
+		        		cin>>opcao;
+					
+					switch(opcao){
+						case 1:{
+							cout<<"\n\tInsira o valor do Nó que deseja inserir: ";
+							cin>>valor;
+							insereAbb(raizAbb, valor);
+							total++;
+							cout<<"\n\n\t";
+							system("pause");
+							system("cls");
+							break;
+						}
+						case 2:{
+							cout<<"\n\tInsira o valor do Nó que deseja Remover: ";
+							cin>>valor;
+							removeAbb(raizAbb, valor);
+							total--;
+							cout<<"\n\n\t";
+							system("pause");
+							system("cls");
+							break;
+						}
+						case 3:{
+							cout<<"\n\tNós em ordem: ";
+							cout<<"\n\t";
+							emOrdemAbb(raizAbb);
+							cout<<"\n\n\t";
+							system("pause");
+							system("cls");
+							break;
+						}
+						case 4:{
+							arquivo.open("result.csv");
+							arquivo << "abb;";
+							arquivo << total << ";";
+							exportAbb(raizAbb);
+							arquivo.close();
+							cout<<"\n\tArquivo Exportado com Sucesso!";
+							cout<<"\n\t";
+							system("pause");
+							system("cls");
+							break;
+						}
+						case 5:{
+							next = false;
+							cout <<"\n\tMuito obrigado pela sua atenção"<<endl;
+							cout <<"\n\tVOLTE SEMPRE!!"<<endl;
+							cout<<"\n\n\t";
+							system("pause");
+							system("cls");
+							break;
+						}
+						default:{
+							cout <<"\n\tOpção inválida! ";
+		        			cout <<"\n\tDigite umas das opções contempladas no menu: ";
+		        			cout<<"\n\n\t";
+							system("pause");
+							system("cls");
+							break;
+						}			
+					}//Fim Switch opções ABB
+			        }while(opcao < 1 || opcao > 5);//Fim Do
+				}	
+			}//Fim case 1: Para árvores ABB
+			
+			case 2:{		        
+		        while(next){
+		        	do{
+		        		cout<<"\n\t===============================================";
+						cout << "\n\t\tMENU ÁRVORE AVL"<< endl; //Titulo tela principal
+						cout<<"\t===============================================";
+				    	cout << endl;
+				    	cout << "\t1 - Inserir Nó" << endl;
+				        cout << "\t2 - Remover Nó" << endl;
+				        cout << "\t3 - Listar Arvore" << endl;
+				        cout << "\t4 - Exportar CSV" << endl;
+				        cout << "\t5 - Sair" << endl;
+		        		cout<<"\n\tDigite a opção que deseja: ";
+		        		cin>>opcao;
+					
+					switch(opcao){
+						case 1:{
+							cout<<"\n\tInsira o valor do Nó que deseja inserir: ";
+							cin>>valor;
+							insereAvl(raizAvl, valor);
+							total++;
+							cout<<"\n\n\t";
+							system("pause");
+							system("cls");
+							break;
+						}
+						case 2:{
+							cout<<"\n\tInsira o valor do Nó que deseja Remover: ";
+							cin>>valor;
+							removeAvl(raizAvl, valor);
+							total--;
+							cout<<"\n\n\t";
+							system("pause");
+							system("cls");
+							break;
+						}
+						case 3:{
+							cout<<"\n\tNós em ordem: ";
+							cout<<"\n\t";
+							emOrdemAvl(raizAvl);
+							cout<<"\n\n\t";
+							system("pause");
+							system("cls");
+							break;
+						}
+						case 4:{
+							arquivo.open("result.csv");
+							arquivo << "avl;";
+							arquivo << total << ";";
+							exportAvl(raizAvl);
+							arquivo.close();
+							cout<<"\n\tArquivo Exportado com Sucesso!";
+							cout<<"\n\t";
+							system("pause");
+							system("cls");
+							break;
+						}
+						case 5:{
+							next = false;
+							cout <<"\n\tMuito obrigado pela sua atenção"<<endl;
+							cout <<"\n\tVOLTE SEMPRE!!"<<endl;
+							cout<<"\n\n\t";
+							system("pause");
+							system("cls");
+							break;
+						}
+						default:{
+							cout <<"\n\tOpção inválida! ";
+		        			cout <<"\n\tDigite umas das opções contempladas no menu: ";
+		        			cout<<"\n\n\t";
+							system("pause");
+							system("cls");
+							break;
+						}			
+					}//Fim Switch opções AVL
+			        }while(opcao < 1 || opcao > 5);//Fim Do
+				}	
+			}//Fim case 2: Para árvores AVL
+			
+			case 3:{		        
+		        while(next){
+		        	do{
+		        		cout<<"\n\t===============================================";
+						cout << "\n\t\tMENU ÁRVORE RUBRO NEGRA"<< endl; //Titulo tela principal
+						cout<<"\t===============================================";
+				    	cout << endl;
+				    	cout << "\t1 - Inserir Nó" << endl;
+				        cout << "\t2 - Remover Nó" << endl;
+				        cout << "\t3 - Listar Arvore" << endl;
+				        cout << "\t4 - Exportar CSV" << endl;
+				        cout << "\t5 - Sair" << endl;
+		        		cout<<"\n\tDigite a opção que deseja: ";
+		        		cin>>opcao;
+					
+					switch(opcao){
+						case 1:{
+							cout<<"\n\tInsira o valor do Nó que deseja inserir: ";
+							cin>>valor;
+							insereRn(valor);
+							total++;
+							cout<<"\n\n\t";
+							system("pause");
+							system("cls");
+							break;
+						}
+						case 2:{
+							cout<<"\n\tInsira o valor do Nó que deseja Remover: ";
+							cin>>valor;
+							removeRn(valor);
+							total--;
+							cout<<"\n\n\t";
+							system("pause");
+							system("cls");
+							break;
+						}
+						case 3:{
+							cout<<"\n\tNós em ordem: ";
+							cout<<"\n\t";
+							emOrdemRn(raizRn);
+							cout<<"\n\n\t";
+							system("pause");
+							system("cls");
+							break;
+						}
+						case 4:{
+							arquivo.open("result.csv");
+							arquivo << "abb;";
+							arquivo << total << ";";
+							exportRn(raizRn);
+							arquivo.close();
+							cout<<"\n\tArquivo Exportado com Sucesso!";
+							cout<<"\n\t";
+							system("pause");
+							system("cls");
+							break;
+						}
+						case 5:{
+							next = false;
+							cout <<"\n\tMuito obrigado pela sua atenção"<<endl;
+							cout <<"\n\tVOLTE SEMPRE!!"<<endl;
+							cout<<"\n\n\t";
+							system("pause");
+							system("cls");
+							break;
+						}
+						default:{
+							cout <<"\n\tOpção inválida! ";
+		        			cout <<"\n\tDigite umas das opções contempladas no menu: ";
+		        			cout<<"\n\n\t";
+							system("pause");
+							system("cls");
+							break;
+						}			
+					}//Fim Switch opções RN
+			        }while(opcao < 1 || opcao > 5);//Fim Do
+				}	
+			}//Fim case 3: Para árvores RN			
+		}//Fim Switch que aponta para menus: ABB, AVL ou RN
+	}
+	system("pause");
+	return 0;
+}//Fim main
