@@ -956,9 +956,9 @@ int main () {
 	cout<<"\t===============================================";
 	cout<<"\n\n\tSEJA BEM VINDO";
 	cout<<"\n\n\tEQUIPE:";
-	cout<<"\n\t- Francisco Helano Mesquita Rocha";
+	cout<<"\n\t- Francisco Helano";
 	cout<<"\n\t- Igor Bonfim";
-	cout<<"\n\t- Samuel Anderson Muniz Vasconcelos";
+	cout<<"\n\t- Samuel";
 	cout<<"\n\n\tVamos Começar?";
 	cout<<"\n\n\tDigite o Nome do arquivo que deseja importar: ";
 	cin>>arq;//Ler o nome do arquivo digitado pelo usuário
